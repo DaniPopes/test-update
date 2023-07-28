@@ -15,7 +15,6 @@ env:
   TITLE: "chore(deps): weekly `cargo update`"
   BODY: |
     Automation to keep dependencies in `Cargo.lock` current.
-    See [dependencies.yml](https://github.com/${{ github.repository }}/.github/workflows/dependencies.yml).
 
     <details><summary><strong>cargo update log</strong></summary>
     <p>
