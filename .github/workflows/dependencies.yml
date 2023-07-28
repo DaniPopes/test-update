@@ -9,9 +9,6 @@ on:
   workflow_dispatch:
     # Needed so we can run it manually
 
-permissions:
-  contents: read
-
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   BRANCH: cargo-update
@@ -34,8 +31,6 @@ jobs:
   update:
     name: Update
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@nightly
