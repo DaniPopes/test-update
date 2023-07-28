@@ -1,0 +1,60 @@
+# Automatically run `cargo update` periodically
+
+name: Update Dependencies
+
+on:
+  schedule:
+    # Run weekly
+    - cron: "0 0 * * SUN"
+  workflow_dispatch:
+    # Needed so we can run it manually
+
+permissions:
+  contents: read
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  TITLE: "chore(deps): weekly `cargo update`"
+  BODY: |
+    Automation to keep dependencies in `Cargo.lock` current.
+    See [dependencies.yml](https://github.com/${{ github.repository }}/.github/workflows/dependencies.yml).
+
+    <details><summary><strong>cargo update log</strong></summary>
+    <p>
+
+    ```log
+    $cargo_update_log
+    ```
+
+    </p>
+    </details>
+  BRANCH: cargo-update
+
+jobs:
+  update:
+    name: Update
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+
+      - name: cargo update
+        # Remove first line that always just says "Updating crates.io index"
+        run: cargo update 2>&1 | sed '/crates.io index/d' | tee -a cargo_update.log
+
+      - name: craft commit message and PR body
+        id: msg
+        run: |
+          export cargo_update_log="$(cat cargo_update.log)"
+          echo "commit_message=${{ TITLE }}\n\n$cargo_update_log" >> $GITHUB_OUTPUT
+          echo "body=${{ BODY }}" | envsubst >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: ${{ steps.msg.outputs.commit_message }}
+          title: ${{ TITLE }}
+          body: ${{ steps.msg.outputs.body }}
+          branch: ${{ BRANCH }}
